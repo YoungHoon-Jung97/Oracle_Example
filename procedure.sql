@@ -452,7 +452,7 @@ BEGIN
     
 END;    
 
-
+--------------------------------------------------------------------------------
 
 --○ TBL_INSA 테이블을 대상으로 데이터를 입력하는 프로시저를 작성한다.
 --  NUM,NAME,SSN, IBSADATE,CITY,TEL,BESEO,JIKWI,BASICPAY,SUDANG
@@ -493,6 +493,188 @@ BEGIN
     
     COMMIT;
     
+END;
+
+--> 유효하지 한 패스워드를 입력했을 경우
+EXEC PRC_STUDENTS_UPDATE('superman','java006$','010-2762-1916','인천계양구'); 
+
+SELECT *
+FROM TBL_STUDENTS;
+--==>>
+/*
+superman	정영훈	010-2762-1916	인천계양구
+happyday	곽유진	010-2222-2222	서울 마포구
+happytest	엄서연	010-3333-3333	서울 종로구
+
+*/
+
+
+EXEC PRC_INSA_INSERT('안예지','980716-2234567',SYSDATE,'서울','010-5555-5555','영업부','대리',500000,500000);
+
+SELECT *
+FROM TBL_INSA
+WHERE NAME = '안예지';
+--------------------------------------------------------------------------------
+--○ 실습 테이블 생성
+--테이블명 : (TBL_상품)
+CREATE TABLE TBL_상품
+(상품코드  VARCHAR2(20)
+,상품명    VARCHAR2(100)
+,소비자가격 NUMBER
+,재고수량   NUMBER DEFAULT 0
+,CONSTRAINT 삼품_상품코드_PK PRIMARY KEY (상품코드)
+);
+--==>>Table TBL_상품이(가) 생성되었습니다
+
+--○ 실습 테이블 생성
+--  테이블명 : TBL_입고
+CREATE TABLE TBL_입고
+(입고번호  NUMBER
+,상품코드   VARCHAR2(20)
+,입고일자   DATE  DEFAULT SYSDATE
+,입고수량   NUMBER
+,입고단가   NUMBER
+,CONSTRAINT 입고_입고번호_PK PRIMARY KEY(입고번호)
+,CONSTRAINT 입고_상품코드_FK FOREIGN KEY(상품코드)
+                REFERENCES TBL_상품(상품코드)
+);
+--==>>Table TBL_입고이(가) 생성되었습니다
+
+-- TBL_입고 테이블의 입고번호를 기본키(PK) 제약조건 설정
+--  
+
+--○ 데이터 입력
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('H001','홈런볼',1500);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('H002','새우깡',1200);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('H003','스윙칩',1000);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('H004','치토스',1100);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('H005','밭두렁',1000);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('H006','오감자',2000);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('H007','양파링',1700);
+--==>>1 행 이(가) 삽입되었습니다. *7
+
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('C001','초코칩',1800);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('C002','버터링',1900);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('C003','에이스',1700);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('C004','오레오',2200);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('C005','다이젠',2500);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('C006','아이비',1200);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('C007','오예스',3500);
+
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('E001','마이쮸',1000);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('E002','엠엔엠',1100);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('E003','아이셔',1100);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('E004','비틀즈',1200);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('E005','아폴로',1000);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('E006','새콜달',1500);
+INSERT INTO TBL_상품(상품코드,상품명,소비자가격)
+VALUES('E007','말랑카',1600);
+
+SELECT *
+FROM TBL_상품;
+--==>>
+/*
+H001	홈런볼	1500	0
+H002	새우깡	1200	0
+H003	스윙칩	1000	0
+H004	치토스	1100	0
+H005	밭두렁	1000	0
+H006	오감자	2000	0
+H007	양파링	1700	0
+C001	초코칩	1800	0
+C002	버터링	1900	0
+C003	에이스	1700	0
+C004	오레오	2200	0
+C005	다이젠	2500	0
+C006	아이비	1200	0
+C007	오예스	3500	0
+E001	마이쮸	1000	0
+E002	엠엔엠	1100	0
+E003	아이셔	1100	0
+E004	비틀즈	1200	0
+E005	아폴로	1000	0
+E006	새콜달	1500	0
+E007	말랑카	1600	0
+*/
+
+COMMIT;
+--○ TBL_상품, TBL_입고 테이블을 대상으로
+--  TBL_입고 테이블에 데이터 입력 시(즉 , 입고 이벤트 발생 시)
+
+--  TBL_상품 테입르 해당 상품의 재고수량이 함께 변동될 수 있는 기능을 가진
+--  프로시저를 작성한다.
+--  단, 이 과정에서 입고번호는 자동 증가 처리한다.(시퀀스 사용 X)
+--  TBL_입고 테이블 구성 컬럼
+--  → 입고번호, 상품코드, 입고일자, 입고수량, 입고단가
+--  프로시저명 : PRC_입고_INSERT(상품코드,입고수량,입고단가)
+
+--※ TBL_입고 테이블에  입고 이벤트 발생 시...
+--  관련 테이블에서 수행되어야 하는 내용
+--  ① INSERT → TBL_입고
+--     INSERT INTO TBL_입고 (입고번호, 상품코드,입고일자,입고수량,입고단가)
+--     VALUES(1,'H001',SYSDATE,20,1000);
+--  ② UPDATE → TBL_상품
+--     UPDATE TBL_상품
+--     SET 재고수량 = 기존재고수량 + 20(← 입고수량)
+--     WHERE 상품코드='H001';
+
+
+SELECT *
+FROM TBL_입고;
+
+DESC TBL_입고;
+
+SELECT *
+FROM TBL_상품;
+
+CREATE OR REPLACE PROCEDURE PRC_입고_INSERT
+(V_상품코드       TBL_상품.상품코드%TYPE
+,V_입고수량       TBL_입고.입고수량%TYPE
+,V_입고단가       TBL_입고.입고단가%TYPE
+)
+IS
+    --아래의 쿼리문을 수행하기 위해 필요한 데이터 변수로 추가 선언
+    V_입고번호 TBL_입고.입고번호%TYPE ;
+BEGIN
+    --선언한 변수 (V_입고번호)에 값 담아내기
+    SELECT NVL(MAX(입고번호),0)+1 INTO V_입고번호
+    FROM TBL_입고;
+    
+    --결과값이 NULL이 나옴
+    --SELECT MAX(NVL(입고번호,0))+1 INTO V_입고번호
+    --FROM TBL_입고;
+    
+    --쿼리문 작성
+    --①INSERT문
+    INSERT INTO TBL_입고 (입고번호,상품코드,입고수량,입고단가)
+    VALUES(V_입고번호,V_상품코드,V_입고수량,V_입고단가);
+    
+    --②UPDATE문
+    UPDATE TBL_상품
+    SET 소비자가격 = V_입고단가, 재고수량 = V_입고수량 + 재고수량
+    WHERE V_상품코드 = 상품코드;
+    
+    COMMIT;
 END;
 
 
