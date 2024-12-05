@@ -190,8 +190,9 @@ FROM TBL_상품;
 
 CREATE OR REPLACE PROCEDURE PRC_출고_UPDATE(
 
-V_출고번호      IN TBL_출고.출고번호%TYPE
-,V_변경할수량   IN TBL_출고.출고수량%TYPE
+    --① 매개변수 구성
+    V_출고번호      IN TBL_출고.출고번호%TYPE
+,   V_변경할수량    IN TBL_출고.출고수량%TYPE
 )
 IS
     V_재고수량 TBL_상품.재고수량%TYPE;
@@ -218,10 +219,13 @@ BEGIN
         THEN RAISE USER_DEFINE_ERROR;
     END IF;
     
+    --② 수행 쿼리문 구성
+    --UPDATE → TBL_출고
     UPDATE TBL_출고
     SET 출고수량 = V_변경할수량
     WHERE 출고번호 = V_출고번호;
     
+    --UPDATE → TBL_상품
     UPDATE TBL_상품
     SET 재고수량 =(V_재고수량+ V_출고수량)-V_변경할수량
     WHERE 상품코드 = V_상품코드;
@@ -237,3 +241,195 @@ BEGIN
             THEN ROLLBACK;
 END;
 
+
+
+EXEC PRC_출고_DELETE(1);
+--◎ TBL_입고 테이블에서 입고수량을 수정(변경)하는 프로시자를 작성한다.
+--  프로시저명 :PRC_입고_UPDATE(입고번호,변경할수량)
+
+CREATE OR REPLACE PROCEDURE PRC_입고_UPDATE
+(V_입고번호      IN TBL_입고.입고번호%TYPE
+,V_변경할수량    IN TBL_입고.입고수량%TYPE
+)
+IS
+    --③변수선언 → V_상품코드
+    V_상품코드 TBL_상품.상품코드%TYPE;
+    --⑤변수선언 → V_재고수량
+    V_재고수량 TBL_상품.재고수량%TYPE;
+    --⑥변수선언 → V_입고수량
+    V_입고수량 TBL_입고.입고수량%TYPE;
+     --⑨변수선언 
+    USER_DEFINE_ERROR EXCEPTION;
+BEGIN
+    
+    --④변수값 대입 → V_상품코드
+    SELECT 상품코드 INTO V_상품코드
+    FROM TBL_입고
+    WHERE 입고번호 = V_입고번호;
+    
+    --⑦변수값 대입 → V_재고수량
+    SELECT 재고수량 INTO V_재고수량
+    FROM TBL_상품
+    WHERE V_상품코드 = 상품코드;
+    
+    --⑧변수값 대입 → V_입고수량
+    SELECT 입고수량 INTO V_입고수량
+    FROM TBL_입고
+    WHERE V_입고번호 = 입고번호;
+    
+    --⑩예외처리 발생
+    IF (V_재고수량 - V_입고수량) <0
+        THEN RAISE USER_DEFINE_ERROR;
+    END IF;
+    
+    
+    --①쿼리문 작성 → UPDATE TBL_입고
+    UPDATE TBL_입고
+    SET 입고수량 = V_변경할수량
+    WHERE V_입고번호 =입고번호;
+    
+    --②쿼리문 작성 → UPDATE TBL_상품
+    UPDATE TBL_상품
+    SET 재고수량 = V_재고수량 -  V_입고수량 + V_변경할수량
+    WHERE V_상품코드 = 상품코드;
+    
+    --커밋
+    COMMIT;
+    
+     --⑪예외처리
+    EXCEPTION
+        WHEN USER_DEFINE_ERROR
+            THEN RAISE_APPLICATION_ERROR(-20001,'오류');
+            ROLLBACK;
+        WHEN OTHERS
+            THEN ROLLBACK;
+    
+    
+END;
+
+
+
+--◎ TBL_출고 테이블에서 출고수량을 삭제하는 프로시자를 작성한다.
+--  프로시저명 :PRC_출고_DELETE(출고번호) 
+
+CREATE OR REPLACE PROCEDURE PRC_출고_DELETE
+(V_출고번호     IN TBL_출고.출고번호%TYPE
+)
+IS
+    --③변수선언 → V_상품코드
+    V_상품코드 TBL_상품.상품코드%TYPE;
+    --⑤변수선언 → V_재고수량
+    V_재고수량 TBL_상품.재고수량%TYPE;
+    --⑥변수선언 → V_입고수량
+    V_출고수량 TBL_출고.출고수량%TYPE;
+    
+BEGIN
+
+    --④변수값 대입 → V_상품코드
+    SELECT 상품코드 INTO V_상품코드
+    FROM TBL_출고
+    WHERE 출고번호 = V_출고번호;
+    
+    --⑦변수값 대입 → V_재고수량
+    SELECT 재고수량 INTO V_재고수량
+    FROM TBL_상품
+    WHERE V_상품코드 = 상품코드;
+    
+    --⑧변수값 대입 → V_입고수량
+    SELECT 출고수량 INTO V_출고수량
+    FROM TBL_출고
+    WHERE V_출고번호 = 출고번호;
+    
+    --①쿼리문 작성 → DELETR TBL_출고
+    DELETE
+    FROM TBL_출고
+    WHERE 출고번호 = V_출고번호;
+    
+    --②쿼리문 작성 → UPDATE TBL_상품
+    UPDATE TBL_상품
+    SET 재고수량 = V_재고수량 +  V_출고수량 
+    WHERE V_상품코드 = 상품코드;
+    
+     --커밋
+    COMMIT;
+    
+    --⑨예외처리
+    EXCEPTION
+        WHEN OTHERS
+            THEN ROLLBACK;
+    
+END;
+
+
+--◎ TBL_입고 테이블에서 입고수량을 삭제하는 프로시자를 작성한다.
+--  프로시저명 :PRC_입고_DELETE(입고번호)
+
+CREATE OR REPLACE PROCEDURE PRC_입고_DELETE
+(V_입고번호     IN TBL_입고.입고번호%TYPE
+)
+IS
+    --③변수선언 → V_상품코드
+    V_상품코드 TBL_상품.상품코드%TYPE;
+    --⑤변수선언 → V_재고수량
+    V_재고수량 TBL_상품.재고수량%TYPE;
+    --⑥변수선언 → V_입고수량
+    V_입고수량 TBL_입고.입고수량%TYPE;
+    --⑨변수선언 
+    USER_DEFINE_ERROR EXCEPTION;
+    MAX             NUMBER;
+
+    
+BEGIN
+
+    --④변수값 대입 → V_상품코드
+    SELECT 상품코드 INTO V_상품코드
+    FROM TBL_입고
+    WHERE 입고번호 = V_입고번호;
+    
+    --⑦변수값 대입 → V_재고수량
+    SELECT 재고수량 INTO V_재고수량
+    FROM TBL_상품
+    WHERE V_상품코드 = 상품코드;
+    
+    --⑧변수값 대입 → V_입고수량
+    SELECT 입고수량 INTO V_입고수량
+    FROM TBL_입고
+    WHERE V_입고번호 = 입고번호;
+    
+    SELECT MAX(입고번호) INTO MAX
+    FROM TBL_입고;
+    
+    --⑩예외처리 발생
+    IF V_입고번호 NOT BETWEEN 1 AND MAX 
+        THEN RAISE USER_DEFINE_ERROR;
+    END IF;
+    
+    IF (V_재고수량 - V_입고수량) <0
+        THEN RAISE USER_DEFINE_ERROR;
+    END IF;
+    
+    
+    
+    --①쿼리문 작성 → DELETR TBL_입고
+    DELETE
+    FROM TBL_입고
+    WHERE 입고번호 = V_입고번호;
+    
+    --②쿼리문 작성 → UPDATE TBL_상품
+    UPDATE TBL_상품
+    SET 재고수량 = V_재고수량 -  V_입고수량 
+    WHERE V_상품코드 = 상품코드;
+    
+     --커밋
+    COMMIT;
+    
+    --⑪예외처리
+    EXCEPTION
+        WHEN USER_DEFINE_ERROR
+            THEN RAISE_APPLICATION_ERROR(-20001,'오류');
+            ROLLBACK;
+        WHEN OTHERS
+            THEN ROLLBACK;
+    
+    
+END;
